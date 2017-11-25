@@ -39,18 +39,17 @@ Directory* BaseCommand:: getLastDir(string args, FileSystem &fs) {
     int i;
     for (string currFile: fileNames) {
         if (currFile.compare("..") == 0) {
-                start = start->getParent();
+            start = start->getParent();
         }
         else {
             currDirName = start->getName();
-            children = start->getChildren();
-            //go over all children, check if directory and name = fileName
-            for (i = 0; i < children.size(); i++) {
-                if (i == children.size()-1 && children[i]->getName() != currFile){
+            //go over all (start->getChildren()), check if directory and name = fileName
+            for (i = 0; i < start->getChildren().size(); i++) {
+                if (i == start->getChildren().size()-1 && start->getChildren()[i]->getName() != currFile){
                     return start;
                 }
-                if (typeid(*children[i]) == typeid(Directory) && children[i]->getName() == currFile) {
-                    start = dynamic_cast<Directory *>(children[i]);
+                if (typeid(*(start->getChildren()[i])) == typeid(Directory) && start->getChildren()[i]->getName() == currFile) {
+                    start = dynamic_cast<Directory *>(start->getChildren()[i]);
                     break;
                 }
             }
@@ -67,24 +66,22 @@ bool BaseCommand::isFileExists(string args, FileSystem &fs) {
         start = &fs.getWorkingDirectory();
     }
     vector<string> fileNames = splitString(getArgs()); //splits the path to seperate words
-    vector<BaseFile *> children;
     for (size_t j = 0; j < fileNames.size(); j++) {
-        children = start->getChildren();
-        //go over all children, check if directory and name = fileName
-        for (int i = 0; i < children.size(); i++) {
-            if (typeid(*children[i]) == typeid(Directory) && children[i]->getName() == fileNames[j]) {
-                start = dynamic_cast<Directory *>(children[i]);
+        //go over all (start->getChildren()), check if directory and name = fileName
+        for (int i = 0; i < (start->getChildren().size()); i++) {
+            if (j == fileNames.size()-1){
+                if (typeid(*(start->getChildren()[i])) == typeid(File) && (start->getChildren()[i]->getName() == fileNames[j])) {
+                    return true;
+                }
+                else if(typeid(*(start->getChildren()[i])) == typeid(Directory) && (start->getChildren()[i]->getName() == fileNames[j])){
+                    return true;
+                }
+            }
+            else if (typeid(*(start->getChildren()[i])) == typeid(Directory) && (start->getChildren()[i]->getName() == fileNames[j])){
+                start = dynamic_cast<Directory *>((start->getChildren())[i]);
                 break;
             }
-            if (j == fileNames.size()-1){
-            if (typeid(*children[i]) == typeid(File) && children[i]->getName() == fileNames[j]) {
-                return true;
-            }
-            else if(typeid(*children[i]) == typeid(Directory) && children[i]->getName() == fileNames[j]){
-                return true;
-            }
-            }
-            if (i >= children.size()) { //gone through all children and didnt find next directory
+            if (i >= (start->getChildren()).size()) { //gone through all (start->getChildren()) and didnt find next directory
                 return false;
             }
         }
@@ -125,14 +122,15 @@ void LsCommand::execute(FileSystem &fs) {
     if(!isFileExists(getArgs(), fs)){
         cout << "The System cannot find the path specified" << endl;
     }
-    if(getArgs().find("[-s]")) {
-        fs.getWorkingDirectory().sortBySize();
+    else {
+        if (getArgs().find("[-s]")) {
+            fs.getWorkingDirectory().sortBySize();
+        } else {
+            fs.getWorkingDirectory().sortByName();
+        }
+        cout << fs.getWorkingDirectory().getName() + "\t" << endl;
+        fs.getWorkingDirectory().printChildren();
     }
-    else           {
-        fs.getWorkingDirectory().sortByName();
-    }
-    cout << fs.getWorkingDirectory().getName() + "\t" << endl;
-    fs.getWorkingDirectory().printChildren();
 }
 
 string LsCommand::toString() {
@@ -154,8 +152,10 @@ void MkdirCommand::execute(FileSystem &fs) {
             if (start->getName() == fileNames[j]){
                 break;
             }
-            start->addFile(new Directory(fileNames[j], nullptr));
-            start = dynamic_cast<Directory*>(start->getChildren()[start->getChildren().size()-1]);
+            start->addFile(new Directory(fileNames[j], start));
+            if(j != fileNames.size() -1) {
+                start = dynamic_cast<Directory *>(start->getChildren()[start->getChildren().size() - 1]);
+            }
         }
     }
 }
@@ -220,7 +220,7 @@ void CpCommand::execute(FileSystem &fs) {
         else {
             vector<BaseFile *> children;
             children = start->getChildren();
-            //go over all children, check if directory and name = fileName
+            //go over all (start->getChildren()), check if directory and name = fileName
             for (int i = 0; i < children.size(); i++) {
                 if (children[i]->getName() == fileNames[fileNames.size()-1]) {
                     start2->addFile(children[i]);
@@ -260,19 +260,19 @@ void MvCommand::execute(FileSystem &fs) {
                 start->getParent()->removeFile(start->getName());
             }
         }
-            else {
-                vector<BaseFile *> children;
-                children = start->getChildren();
-                //go over all children, check if directory and name = fileName
-                for (int i = 0; i < children.size(); i++) {
-                    if (children[i]->getName() == fileNames[fileNames.size() - 1]) {
-                        start2->addFile(children[i]);
-                        start->removeFile(children[i]->getName());
-                    }
+        else {
+            vector<BaseFile *> children;
+            children = start->getChildren();
+            //go over all (start->getChildren()), check if directory and name = fileName
+            for (int i = 0; i < children.size(); i++) {
+                if (children[i]->getName() == fileNames[fileNames.size() - 1]) {
+                    start2->addFile(children[i]);
+                    start->removeFile(children[i]->getName());
                 }
             }
         }
     }
+}
 
 
 string MvCommand::toString() {
@@ -335,11 +335,11 @@ void RmCommand::execute(FileSystem &fs) {
         }
         else {
             children = start->getChildren();
-            //go over all children, check if directory and name = fileName
+            //go over all (start->getChildren()), check if directory and name = fileName
             for (i = 0; i < children.size(); i++) {
                 if(children[i]->getName() == lastFile){
                     start->removeFile(lastFile);
-               }
+                }
             }
         }
     }
@@ -389,7 +389,7 @@ ErrorCommand::ErrorCommand(string args) : BaseCommand(args) {
 
 void ErrorCommand::execute(FileSystem &fs) {
     size_t k = getArgs().find(' ');
-cout << getArgs().substr(0, k) + ": Unknown command";
+    cout << getArgs().substr(0, k) + ": Unknown command";
 }
 
 string ErrorCommand::toString() {
