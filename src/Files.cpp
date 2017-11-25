@@ -28,7 +28,7 @@ BaseFile* File::clone() const { return  new File(*this);}
 
 Directory::Directory(string name, Directory *parent) : BaseFile(name),parent(parent) ,children(){
 
-    }
+}
 
 
 Directory::Directory(const Directory& other):BaseFile(other.getName()) ,parent(nullptr),children(){
@@ -110,8 +110,8 @@ void Directory:: removeFile(string name) {
             if(typeid(Directory*) == typeid(*it)){
                 dynamic_cast<Directory*>(*it)->clear();
             }
-                delete *it;
-                it = children.erase(it);
+            delete *it;
+            it = children.erase(it);
         }
     }
 }
@@ -157,9 +157,13 @@ int Directory::getSize() {
 }
 
 string Directory::getAbsolutePath() {
-    if(parent!= nullptr)
-        getParent()->getAbsolutePath();
-    return getName();
+    if(parent != nullptr && parent->getParent() == nullptr)
+        return "/" +getName();
+   else if(parent!= nullptr)
+        return getParent()->getAbsolutePath()+"/"+getName();
+    if(parent == nullptr)
+    return "/";
+
 }
 
 BaseFile* Directory::clone() const { return  new Directory(*this);}
@@ -176,11 +180,13 @@ void Directory:: clear(){
 }
 
 void Directory::printChildren(){
-    for (vector<BaseFile *> ::iterator it = children.begin(); it != children.end(); it++) {
-        cout << (*it)->getName() <<  "\t" <<  (*it)->getSize()   << endl ; }
-
+    for (vector<BaseFile *> ::iterator it = children.begin(); it != children.end(); ++it) {
+        if(dynamic_cast<Directory *> (*it)){
+        cout << "Dir" << "\t" << (*it)->getName() <<  "\t" <<  (*it)->getSize()   << endl ; }
+        else{
+    cout << "File" << "\t" << (*it)->getName() <<  "\t" <<  (*it)->getSize()   << endl ; }
 }
-
+    }
 bool Directory::containsChild(BaseFile* file) {
     vector<BaseFile*> :: iterator it;
     for(it = children.begin(); it != children.end(); it++){
