@@ -8,8 +8,11 @@ void Environment::start() {
     while (args != "exit") {
         cout << fs.getWorkingDirectory().getAbsolutePath() + ">";
         getline(cin, args);
-        if(args == "exit")
+        if(args == "exit") {
             return;
+        }
+        if(verbose ==2 || verbose == 3)
+            whichCommand(args)->toString();
         whichCommand(args)->execute(fs);
         addToHistory(whichCommand(args));
     }
@@ -17,9 +20,6 @@ void Environment::start() {
 }
 
 Environment::Environment() : commandsHistory(), fs() {
-    if (verbose == 1 | verbose == 3) {
-        cout << "Environment :: Environment()" << endl;
-    }
 }
 
 Environment::Environment(const Environment &other) {
@@ -101,7 +101,7 @@ BaseCommand *Environment::whichCommand(string arg) {
 
     unsigned long firstSpace = arg.find(' ');
     string command = firstSpace == string::npos ? arg : arg.substr(0, firstSpace);
-    auto argsCommand = firstSpace == string::npos ? arg : arg.substr(arg.find(' '));
+    auto argsCommand = firstSpace == string::npos ? arg : arg.substr(arg.find(' ')+1);
     if (command == "pwd") {
         BaseCommand *pwd = new PwdCommand(argsCommand);
         return pwd;
@@ -109,7 +109,11 @@ BaseCommand *Environment::whichCommand(string arg) {
         BaseCommand *cd = new CdCommand(argsCommand);
         return cd;
     } else if (command == "ls") {
-        BaseCommand *ls = new LsCommand(argsCommand);
+        BaseCommand *ls;
+        if(argsCommand == "ls")
+        ls = new LsCommand("");
+        else
+        ls = new LsCommand(argsCommand);
         return ls;
     } else if (command == "mkdir") {
         BaseCommand *mkdir = new MkdirCommand(argsCommand);
