@@ -34,23 +34,26 @@ Directory* BaseCommand:: getLastDir(string args, FileSystem &fs) {
         start = &fs.getWorkingDirectory();
     }
     vector<string> fileNames = splitString(args); //splits the path to seperate words
-    vector<BaseFile *> children;
-    string currDirName;
     int i;
-    for (string currFile: fileNames) {
-        if (currFile.compare("..") == 0) {
+    for (size_t  j = 0; j <fileNames.size(); j++) {
+        if (fileNames[j] == "..") {
             start = start->getParent();
         }
         else {
-            currDirName = start->getName();
             //go over all (start->getChildren()), check if directory and name = fileName
             for (i = 0; i < start->getChildren().size(); i++) {
-                if (i == start->getChildren().size()-1 && start->getChildren()[i]->getName() != currFile){
-                    return start;
+                if (start->getName() == fileNames[j]){
+                    break;
                 }
-                if (typeid(*(start->getChildren()[i])) == typeid(Directory) && start->getChildren()[i]->getName() == currFile) {
+                if (typeid(*(start->getChildren()[i])) == typeid(Directory) &&
+                    start->getChildren()[i]->getName() == fileNames[j]) {
                     start = dynamic_cast<Directory *>(start->getChildren()[i]);
                     break;
+                }
+                if (j == fileNames.size()-1) {
+                    if (i == start->getChildren().size() - 1 && start->getChildren()[i]->getName() != fileNames[j]) {
+                        return start;
+                    }
                 }
             }
         }
@@ -60,7 +63,7 @@ Directory* BaseCommand:: getLastDir(string args, FileSystem &fs) {
 
 bool BaseCommand::isFileExists(string args, FileSystem &fs) {
     Directory *start; //check if works
-    if (getArgs()[0] == '/') { //absolute path or relative
+    if (args[0] == '/') { //absolute path or relative
         start = &fs.getRootDirectory();
     } else {
         start = &fs.getWorkingDirectory();
@@ -149,8 +152,8 @@ void MkdirCommand::execute(FileSystem &fs) {
         Directory *start = getLastDir(getArgs(), fs);
         vector<string> fileNames = splitString(getArgs());
         for (size_t j = 0; j<fileNames.size(); j++) {
-            if (start->getName() == fileNames[j]){
-                break;
+            if (start->getName() == fileNames[j] || (start->getParent() != nullptr && start->getParent()->getName() == fileNames[j])){
+                continue;
             }
             start->addFile(new Directory(fileNames[j], start));
             if(j != fileNames.size() -1) {
