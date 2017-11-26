@@ -235,17 +235,18 @@ void MkfileCommand::execute(FileSystem &fs) {
     int size = atoi(sizeString.c_str());
     Directory *start;
     vector<string> filePath = splitString(path);
-    if(filePath.size() == 1) {
-        if(isFileExists(newFilePath,fs)){
+    if(filePath.size() == 1 && filePath[0] == file) {
+        if (isFileExists(newFilePath, fs)) {
             cout << "File already exists" << endl;
-        }
-        else {
+            return;
+        } else {
             start = getLastDir(newFilePath, fs);
             File newOne = File(file, size);
             start->addFile(newOne.clone());
             return;
         }
     }
+
     if (!isFileExists(path, fs)) {
         cout << "The System cannot find the path specified" << endl;
     }
@@ -258,6 +259,7 @@ void MkfileCommand::execute(FileSystem &fs) {
         start->addFile(newOne.clone());
     }
 }
+
 
 string MkfileCommand::toString() {
     return "mkfile";
@@ -272,6 +274,7 @@ void CpCommand::execute(FileSystem &fs) {
     string destinationPath = getArgs().substr(getArgs().find_first_of(' ') + 1);
     if (!isFileExists(sourcePath, fs)) {
         cout << "No such file or directory" << endl;
+        return;
     }
     if (!isFileExists(destinationPath, fs)) {
         cout << "No such file or directory" << endl;
@@ -308,6 +311,7 @@ void MvCommand::execute(FileSystem &fs) {
     string destinationPath = getArgs().substr(getArgs().find_first_of(' ') + 1);
     if (!isFileExists(sourcePath, fs)) {
         cout << "No such file or directory" << endl;
+        return;
     }
     if (!isFileExists(destinationPath, fs)) {
         cout << "No such file or directory" << endl;
@@ -386,12 +390,15 @@ RmCommand::RmCommand(string args) : BaseCommand(args) {
 }
 
 void RmCommand::execute(FileSystem &fs) {
+    if (getArgs() == "/"){
+        cout << "Can't remove directory" << endl;
+        return;
+    }
     if (!isFileExists(getArgs(), fs)) {
         cout << "No such file or directory" << endl;
     } else {
         Directory *start = getLastDir(getArgs(), fs);
         string lastFile = getArgs().substr(getArgs().find_last_of('/')+1);
-        vector<BaseFile *> children;
         int i;
         if(start->getName() == lastFile){
             if(start == &fs.getWorkingDirectory() || start == &fs.getRootDirectory()
@@ -399,14 +406,13 @@ void RmCommand::execute(FileSystem &fs) {
                 cout << "Can't remove directory" << endl;
             }
             else{
-                delete start;
+                start->getParent()->removeFile(start->getName());
             }
         }
         else {
-            children = start->getChildren();
             //go over all (start->getChildren()), check if directory and name = fileName
-            for (i = 0; i < children.size(); i++) {
-                if(children[i]->getName() == lastFile){
+            for (i = 0; i < start->getChildren().size(); i++) {
+                if(start->getChildren()[i]->getName() == lastFile){
                     start->removeFile(lastFile);
                 }
             }
