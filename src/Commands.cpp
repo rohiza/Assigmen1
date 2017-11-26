@@ -321,18 +321,16 @@ void MvCommand::execute(FileSystem &fs) {
                 || start == (fs.getWorkingDirectory().getParent())) {
                 cout << "Can't move directory" << endl;
             } else {
-                start2->addFile(new Directory(*start));
+                start2->addFile(start->clone());
                 start->getParent()->removeFile(start->getName());
             }
         }
         else {
-            vector<BaseFile *> children;
-            children = start->getChildren();
             //go over all (start->getChildren()), check if directory and name = fileName
-            for (int i = 0; i < children.size(); i++) {
-                if (children[i]->getName() == fileNames[fileNames.size() - 1]) {
-                    start2->addFile(children[i]);
-                    start->removeFile(children[i]->getName());
+            for (int i = 0; i < start->getChildren().size(); i++) {
+                if (start->getChildren()[i]->getName() == fileNames[fileNames.size() - 1]) {
+                    start2->addFile(start->getChildren()[i]->clone());
+                    start->removeFile(start->getChildren()[i]->getName());
                 }
             }
         }
@@ -358,15 +356,21 @@ void RenameCommand::execute(FileSystem &fs) {
     }
     else {
         Directory *start = getLastDir(oldNamePos, fs);
-        vector<BaseFile *> children;
-        children = start->getChildren();
-        for (int i = 0; i < children.size(); i++) {
-            if(children[i]->getName() == oldName){
-                if(children[i] == &fs.getWorkingDirectory()) {
+        if (start->getName() == oldName){
+            if(start == &fs.getWorkingDirectory()) {
+                cout << "Can't rename the working directory" << endl;
+            }
+            else if(!isFileExists(sameName, fs)) {
+                start->setName(newName);
+            }
+        }
+        for (int i = 0; i < start->getChildren().size(); i++) {
+            if(start->getChildren()[i]->getName() == oldName){
+                if(start->getChildren()[i] == &fs.getWorkingDirectory()) {
                     cout << "Can't rename the working directory" << endl;
                 }
                 else if(!isFileExists(sameName, fs)) {
-                    children[i]->setName(newName);
+                    start->getChildren()[i]->setName(newName);
                 }
             }
         }

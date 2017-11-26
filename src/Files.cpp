@@ -25,12 +25,12 @@ int File ::getSize() {
 }
 
 BaseFile* File::clone() const { return  new File(*this);}
+
 bool File::dirOrFile() { return false;}
 
 Directory::Directory(string name, Directory *parent) : BaseFile(name),parent(parent) ,children(){
 
 }
-
 
 Directory::Directory(const Directory& other):BaseFile(other.getName()) ,parent(nullptr),children(){
     dircopy(other.children);
@@ -99,20 +99,33 @@ void Directory::setParent(Directory *newParent) {
 }
 
 void Directory:: addFile(BaseFile* file){
-    if(typeid(Directory*) == typeid(file)){
+    if(file->dirOrFile()){
         dynamic_cast<Directory*>(file)->setParent(this);
     }
     children.push_back(file);
 }
 
 void Directory:: removeFile(string name) {
-    for (vector<BaseFile *>::iterator it = children.begin(); it != children.end(); it++) {
-        if ((*it)->getName() == name) {
-            if(typeid(Directory*) == typeid(*it)){
-                dynamic_cast<Directory*>(*it)->clear();
+    if (children.size() == 0){
+        return;
+    }
+    else {
+        for (vector<BaseFile *>::iterator it = children.begin(); it != children.end(); ++it) {
+            if ((*it)->getName() == name) {
+                if ((*it)->dirOrFile()) {
+                    dynamic_cast<Directory *>(*it)->clear();
+                    Directory *t = dynamic_cast<Directory *>(*it);
+                    delete t;
+                    children.erase(it);
+                    return;
+                }
+                else {
+                    File *f = dynamic_cast<File *>(*it);
+                    delete f;
+                    children.erase(it);
+                    return;
+                }
             }
-            delete *it;
-            it = children.erase(it);
         }
     }
 }
