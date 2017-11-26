@@ -18,8 +18,8 @@ public:
 	bool checkStringleagal(string args) const ;
 	vector<string> splitString(string args);
 	Directory* getLastDir(string args, FileSystem &fs);
-    bool isFileExists(string args, FileSystem &fs);
-    virtual ~BaseCommand() = default;
+	bool isFileExists(string args, FileSystem &fs);
+	virtual ~BaseCommand() = default;
 };
 
 class PwdCommand : public BaseCommand {

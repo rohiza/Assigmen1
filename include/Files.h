@@ -14,6 +14,7 @@ public:
     void setName(string newName);
     virtual int getSize() = 0;
     virtual BaseFile* clone() const =0;
+    virtual bool dirOrFile() =0;
 };
 
 class File : public BaseFile {
@@ -24,6 +25,8 @@ public:
     File(string name, int size); // Constructor
     int getSize(); // Return the size of the file
     virtual BaseFile* clone() const ;
+    bool dirOrFile() ;
+
 };
 
 class Directory : public BaseFile {
@@ -56,6 +59,8 @@ public:
     void steal(Directory& other);
     void printChildren();
     bool containsChild(BaseFile*);
+    bool dirOrFile() ;
+    size_t dirCountBySlash();
 };
 
 #endif
