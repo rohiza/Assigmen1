@@ -26,7 +26,6 @@ public:
     int getSize(); // Return the size of the file
     virtual BaseFile* clone() const ;
     bool dirOrFile() ;
-
 };
 
 class Directory : public BaseFile {
