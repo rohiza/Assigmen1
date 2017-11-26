@@ -35,8 +35,10 @@ Directory* BaseCommand:: getLastDir(string args, FileSystem &fs) {
     }
     vector<string> fileNames = splitString(args); //splits the path to seperate words
     int i;
-    for (size_t  j = 0; j <fileNames.size(); j++) {
+    size_t j;
+    for (j = 0; j <fileNames.size(); j++) {
         if (fileNames[j] == "..") {
+            if(start->getParent() != nullptr)
             start = start->getParent();
         }
         else {
@@ -61,31 +63,46 @@ Directory* BaseCommand:: getLastDir(string args, FileSystem &fs) {
     return start;
 }
 
+
+
 bool BaseCommand::isFileExists(string args, FileSystem &fs) {
+
     Directory *start; //check if works
-    if (args[0] == '/') { //absolute path or relative
+    size_t j =0;
+    if (args[0] == '/' ) { //absolute path or relative
         start = &fs.getRootDirectory();
+        j++;
     } else {
         start = &fs.getWorkingDirectory();
     }
-    vector<string> fileNames = splitString(getArgs()); //splits the path to seperate words
-    for (size_t j = 0; j < fileNames.size(); j++) {
-        //go over all (start->getChildren()), check if directory and name = fileName
+    vector<string> fileNames = splitString(args); //splits the path to seperate words
+    for (j; j < fileNames.size(); j++) {
+        if (fileNames[j] == ".."){
+            if(start->getParent() != nullptr){
+                start = start->getParent();
+                if(j == fileNames.size()-1){
+                    return true;
+                }
+                else {
+                    continue;
+                }
+            }
+            else{
+                return false;
+            }
+        }
         for (int i = 0; i < (start->getChildren().size()); i++) {
             if (j == fileNames.size()-1){
-                if (typeid(*(start->getChildren()[i])) == typeid(File) && (start->getChildren()[i]->getName() == fileNames[j])) {
+                if (!(start->getChildren()[i]->dirOrFile()) && (start->getChildren()[i]->getName() == fileNames[j])) {
                     return true;
                 }
-                else if(typeid(*(start->getChildren()[i])) == typeid(Directory) && (start->getChildren()[i]->getName() == fileNames[j])){
+                else if(start->getChildren()[i]->dirOrFile() && (start->getChildren()[i]->getName() == fileNames[j])){
                     return true;
                 }
             }
-            else if (typeid(*(start->getChildren()[i])) == typeid(Directory) && (start->getChildren()[i]->getName() == fileNames[j])){
+            else if (start->getChildren()[i]->dirOrFile() && (start->getChildren()[i]->getName() == fileNames[j])){
                 start = dynamic_cast<Directory *>((start->getChildren())[i]);
                 break;
-            }
-            if (i >= (start->getChildren()).size()) { //gone through all (start->getChildren()) and didnt find next directory
-                return false;
             }
         }
     }
@@ -104,12 +121,17 @@ string PwdCommand::toString() {
 CdCommand::CdCommand(string args) : BaseCommand(args) {}
 
 void CdCommand::execute(FileSystem &fs) {
+    if(getArgs() == "/") {
+        fs.setWorkingDirectory(&fs.getRootDirectory());
+    }
+    else{
     if (!isFileExists(getArgs(), fs)) {
         cout << "The System cannot find the path specified" << endl;
     }
     else {
         Directory *start = getLastDir(getArgs(), fs);
         fs.setWorkingDirectory(start);
+    }
     }
 }
 
@@ -122,17 +144,27 @@ LsCommand::LsCommand(string args) : BaseCommand(args) {
 }
 
 void LsCommand::execute(FileSystem &fs) {
-    if(!isFileExists(getArgs(), fs)){
-        cout << "The System cannot find the path specified" << endl;
-    }
-    else {
-        if (getArgs().find("[-s]")) {
-            fs.getWorkingDirectory().sortBySize();
-        } else {
-            fs.getWorkingDirectory().sortByName();
-        }
-        cout << fs.getWorkingDirectory().getName() + "\t" << endl;
+    if (getArgs() == "") {
+        fs.getWorkingDirectory().sortByName();
         fs.getWorkingDirectory().printChildren();
+    } else {
+        if (((getArgs() != "") && getArgs() != "-s") && (!isFileExists(getArgs(), fs))) {
+            cout << "The System cannot find the path specified" << endl;
+        } else {
+            unsigned long sortSize = getArgs().find("-s");
+            if (sortSize != string::npos) {
+                fs.getWorkingDirectory().sortBySize();
+                fs.getWorkingDirectory().printChildren();
+            } else {
+                Directory* curr = &fs.getWorkingDirectory();
+                BaseCommand* path = new CdCommand(getArgs());
+                path->execute(fs);
+                fs.getWorkingDirectory().sortByName();
+                fs.getWorkingDirectory().printChildren();
+                fs.setWorkingDirectory(curr);
+                delete path;
+            }
+        }
     }
 }
 
@@ -151,8 +183,12 @@ void MkdirCommand::execute(FileSystem &fs) {
     else{
         Directory *start = getLastDir(getArgs(), fs);
         vector<string> fileNames = splitString(getArgs());
-        for (size_t j = 0; j<fileNames.size(); j++) {
-            if (start->getName() == fileNames[j] || (start->getParent() != nullptr && start->getParent()->getName() == fileNames[j])){
+        size_t j = 0;
+        if(getArgs().at(0) == '/'){
+           j = start->dirCountBySlash();
+        }
+        for (j ; j<fileNames.size(); j++) {
+            if (start->getName() == fileNames[j]){
                 continue;
             }
             start->addFile(new Directory(fileNames[j], start));
@@ -171,8 +207,20 @@ MkfileCommand::MkfileCommand(string args) : BaseCommand(args) {
 }
 
 void MkfileCommand::execute(FileSystem &fs) {
-    string path = getArgs().substr(0,getArgs().find_last_of('/'));
-    string newFile = getArgs().substr(getArgs().find_last_of('/')+1);
+    string path;
+    string newFile;
+    string newFilePath;
+    if (getArgs().at(0) == '/') {
+        path = getArgs().substr(0, getArgs().find_last_of('/'));
+        newFile = getArgs().substr(getArgs().find_last_of('/')+1);
+        newFilePath = getArgs().substr(0,getArgs().find_first_of(' '));
+    }
+    else {
+        unsigned long lastSlash = getArgs().find('/');
+        newFile = lastSlash == string::npos ? getArgs() : getArgs().substr(getArgs().find_last_of('/')+1);
+        newFilePath = getArgs().substr(0,getArgs().find_last_of(' '));
+        path = newFilePath.substr(0, newFilePath.find_last_of('/'));
+    }
     string file = "";
     string sizeString;
     size_t k = 0;
@@ -181,19 +229,33 @@ void MkfileCommand::execute(FileSystem &fs) {
         k++;
     }
     sizeString = newFile.substr((k + 1));
+    if(sizeString == ""){
+        cout << "The System cannot find the path specified" << endl;
+    }
     int size = atoi(sizeString.c_str());
-    string filePath1 = path + file;
-    vector<string> filePath = splitString(filePath1);
+    Directory *start;
+    vector<string> filePath = splitString(path);
+    if(filePath.size() == 1) {
+        if(isFileExists(newFilePath,fs)){
+            cout << "File already exists" << endl;
+        }
+        else {
+            start = getLastDir(newFilePath, fs);
+            File newOne = File(file, size);
+            start->addFile(newOne.clone());
+            return;
+        }
+    }
     if (!isFileExists(path, fs)) {
         cout << "The System cannot find the path specified" << endl;
     }
-    else if (isFileExists(filePath1, fs)) {
+    else if (isFileExists(newFilePath, fs)) {
         cout << "File already exists" << endl;
     }
     else {
-        Directory *start = getLastDir(filePath1, fs);
+        start = getLastDir(path, fs);
         File newOne = File(file, size);
-        start->addFile(dynamic_cast<BaseFile*>(&newOne));
+        start->addFile(newOne.clone());
     }
 }
 
@@ -396,7 +458,7 @@ void ErrorCommand::execute(FileSystem &fs) {
 }
 
 string ErrorCommand::toString() {
-    return "ErrorCommand";
+    return "";
 }
 
 ExecCommand::ExecCommand(string args, const vector<BaseCommand *> &history)

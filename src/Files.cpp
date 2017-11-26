@@ -25,6 +25,7 @@ int File ::getSize() {
 }
 
 BaseFile* File::clone() const { return  new File(*this);}
+bool File::dirOrFile() { return false;}
 
 Directory::Directory(string name, Directory *parent) : BaseFile(name),parent(parent) ,children(){
 
@@ -135,10 +136,12 @@ void Directory::sortByName() {
 
 void Directory::sortBySize() {
     sort(children.begin(), children.end(),[](BaseFile *baseFile1,BaseFile *baseFile2){
-        if(baseFile1->getSize()== baseFile2->getSize())
-            return baseFile1->getName()<baseFile2->getName();
-        else
-            return baseFile1->getSize()<baseFile2->getSize();
+        if(baseFile1->getSize()== baseFile2->getSize()) {
+            return baseFile1->getName() < baseFile2->getName();
+        }
+        else {
+            return baseFile1->getSize() < baseFile2->getSize();
+        }
     });
 }
 
@@ -181,10 +184,10 @@ void Directory:: clear(){
 
 void Directory::printChildren(){
     for (vector<BaseFile *> ::iterator it = children.begin(); it != children.end(); ++it) {
-        if(dynamic_cast<Directory *> (*it)){
-        cout << "Dir" << "\t" << (*it)->getName() <<  "\t" <<  (*it)->getSize()   << endl ; }
+        if((*it)->dirOrFile()){
+        cout << "DIR" << "\t" << "\t" << (*it)->getName() <<  "\t" <<  (*it)->getSize()  << "\t" << endl ; }
         else{
-    cout << "File" << "\t" << (*it)->getName() <<  "\t" <<  (*it)->getSize()   << endl ; }
+    cout << "FILE" << "\t" << (*it)->getName() <<  "\t" <<  (*it)->getSize() << "\t"  << endl ; }
 }
     }
 bool Directory::containsChild(BaseFile* file) {
@@ -195,4 +198,16 @@ bool Directory::containsChild(BaseFile* file) {
         }
     }
     return false;
+}
+bool Directory::dirOrFile() { return true;}
+
+size_t Directory::dirCountBySlash(){
+    size_t j = 0;
+    if(getParent() == nullptr){
+        return j;
+    }
+    else{
+        j++;
+        return getParent()->dirCountBySlash() + j;
+    }
 }

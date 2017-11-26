@@ -7,7 +7,7 @@ FileSystem::FileSystem() {
     if (verbose == 1 | verbose == 3) {
         cout << "FileSystem ::FileSystem()" << endl;
     }
-    rootDirectory = new Directory("/", nullptr);
+    rootDirectory = new Directory("", nullptr);
     workingDirectory = rootDirectory;
 }
 
