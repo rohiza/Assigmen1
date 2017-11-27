@@ -15,6 +15,7 @@ public:
     virtual int getSize() = 0;
     virtual BaseFile* clone() const =0;
     virtual bool dirOrFile() =0;
+    virtual ~BaseFile() {};
 };
 
 class File : public BaseFile {
