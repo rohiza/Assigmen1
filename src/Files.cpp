@@ -198,9 +198,9 @@ void Directory:: clear(){
 void Directory::printChildren(){
     for (vector<BaseFile *> ::iterator it = children.begin(); it != children.end(); ++it) {
         if((*it)->dirOrFile()){
-        cout << "DIR" << "\t" << "\t" << (*it)->getName() <<  "\t" <<  (*it)->getSize()  << "\t" << endl ; }
+        cout << "DIR" << "\t" << (*it)->getName() <<  "\t" <<  (*it)->getSize()  << endl ; }
         else{
-    cout << "FILE" << "\t" << (*it)->getName() <<  "\t" <<  (*it)->getSize() << "\t"  << endl ; }
+    cout << "FILE" << "\t" << (*it)->getName() <<  "\t" <<  (*it)->getSize() << endl ; }
 }
     }
 bool Directory::containsChild(BaseFile* file) {

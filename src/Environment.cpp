@@ -11,8 +11,16 @@ void Environment::start() {
         if(args == "exit") {
             return;
         }
-        if(verbose ==2 || verbose == 3)
-            whichCommand(args)->toString();
+        if(verbose ==2 || verbose == 3) {
+            unsigned long firstSpace = args.find(' ');
+            if(firstSpace == string::npos){
+                cout <<whichCommand(args)->toString() <<endl;
+            }
+            else {
+                cout <<whichCommand(args)->toString() + " " +
+                        args.substr(args.find_first_of(' ') + 1) << endl;
+            }
+        }
         whichCommand(args)->execute(fs);
         addToHistory(whichCommand(args));
     }
@@ -43,7 +51,7 @@ void Environment::addToHistory(BaseCommand *command) {
 
 void Environment::envcopy(const Environment &other) {
 
-    for (int i = 0; i < other.commandsHistory.size(); i++) {
+    for (size_t i = 0; i < other.commandsHistory.size(); i++) {
 
         this->addToHistory(other.commandsHistory[i]);
     }
@@ -103,7 +111,11 @@ BaseCommand *Environment::whichCommand(string arg) {
     string command = firstSpace == string::npos ? arg : arg.substr(0, firstSpace);
     auto argsCommand = firstSpace == string::npos ? arg : arg.substr(arg.find(' ')+1);
     if (command == "pwd") {
-        BaseCommand *pwd = new PwdCommand(argsCommand);
+        BaseCommand *pwd;
+        if(argsCommand == "pwd")
+            pwd = new PwdCommand("");
+        else
+            pwd = new PwdCommand(argsCommand);
         return pwd;
     } else if (command == "cd") {
         BaseCommand *cd = new CdCommand(argsCommand);
@@ -143,7 +155,8 @@ BaseCommand *Environment::whichCommand(string arg) {
         BaseCommand *exec = new ExecCommand(argsCommand, getHistory());
         return exec;
     } else {
-        BaseCommand *error = new ErrorCommand(arg);
+        BaseCommand *error;
+        error = new ErrorCommand(arg);
         return error;
     }
 }

@@ -223,16 +223,17 @@ void MkfileCommand::execute(FileSystem &fs) {
     }
     string file = "";
     string sizeString;
+    unsigned long lastSpace = getArgs().find(' ');
+    if(lastSpace == string::npos){
+        return;
+    }
     size_t k = 0;
     while (newFile.at(k) != ' ') {  //seperates the last string to the name and size of the newfile
         file = file + newFile.at(k);
         k++;
     }
     sizeString = newFile.substr((k + 1));
-    if(sizeString == ""){
-        cout << "The System cannot find the path specified" << endl;
-    }
-    int size = atoi(sizeString.c_str());
+    size_t size = atoi(sizeString.c_str());
     Directory *start;
     vector<string> filePath = splitString(path);
     if(filePath.size() == 1 && filePath[0] == file) {
@@ -432,8 +433,28 @@ HistoryCommand::HistoryCommand(string args, const vector<BaseCommand *> &history
 }
 
 void HistoryCommand::execute(FileSystem &fs) {
-    for(int i= 0;i<history.size();i++){
-        cout << i + "\t" + history[i]->toString() +getArgs().substr(getArgs().find_first_of("/")) <<endl;
+    int j=0;
+    string newFile;
+    for(unsigned int i= 0;i<history.size();i++){
+        if (getArgs().at(0) == '/') {
+            unsigned long lastSlash = history[i]->getArgs().find('/');
+            newFile = lastSlash == string::npos ? history[i]->getArgs() : history[i]->getArgs().substr(history[i]->getArgs().find_first_of('/'));
+        }
+        else {
+            newFile = history[i]->getArgs();
+        }
+        cout << j;
+        if (history[i]->toString() == newFile) {
+            cout << "\t" + history[i]->toString() << endl;
+            j++;
+        }
+        else if (typeid(*history[i]) != typeid(ErrorCommand)) {
+            cout << "\t" + history[i]->toString() + "\t" + newFile << endl;
+            j++;
+        } else{
+            cout <<"\t" + newFile.substr(0,newFile.find_first_of(' ')) + "\t" + newFile.substr(newFile.find_first_of(' ') +1) << endl;
+            j++;
+        }
     }
 
 }
@@ -447,11 +468,11 @@ VerboseCommand::VerboseCommand(string args) : BaseCommand(args) {
 }
 
 void VerboseCommand::execute(FileSystem &fs) {
-    int j = atoi(getArgs().c_str());
-    if( j ==0 | j== 1| j==2 |j==3)
+    size_t j = atoi(getArgs().c_str());
+    if( j ==0 || j== 1 || j==2 || j==3)
         verbose =j;
     else
-        cout << "Wrong verbose input";
+        cout << "Wrong verbose input" << endl;
 }
 
 string VerboseCommand::toString() {
@@ -464,7 +485,7 @@ ErrorCommand::ErrorCommand(string args) : BaseCommand(args) {
 
 void ErrorCommand::execute(FileSystem &fs) {
     size_t k = getArgs().find(' ');
-    cout << getArgs().substr(0, k) + ": Unknown command";
+    cout << getArgs().substr(0, k) + ": Unknown command" <<endl;
 }
 
 string ErrorCommand::toString() {
@@ -478,13 +499,13 @@ ExecCommand::ExecCommand(string args, const vector<BaseCommand *> &history)
 
 void ExecCommand::execute(FileSystem &fs) {
     string number;
-    number = getArgs();
-    int j = atoi(getArgs().c_str());
-    if (j>history.size()-1 | j < 0)
-        cout <<"Command not found";
-    history[j]->execute(fs);
+    size_t j = atoi(getArgs().c_str());
+    if (j > history.size() - 1 || j < 0) {
+        cout << "-Command not found" <<endl;
+    } else {
+        history[j]->execute(fs);
+    }
 }
-
 string ExecCommand::toString() {
     return "exec";
 }
