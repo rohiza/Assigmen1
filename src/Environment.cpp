@@ -3,6 +3,14 @@
 
 using namespace std;
 
+
+Environment::Environment() : commandsHistory(),fs() {
+}
+
+FileSystem &Environment::getFileSystem() {
+    return fs;
+}
+
 void Environment::start() {
     string args = "";
     while (args != "exit") {
@@ -17,8 +25,13 @@ void Environment::start() {
                 cout <<whichCommand(args)->toString() <<endl;
             }
             else {
-                cout <<whichCommand(args)->toString() + " " +
-                        args.substr(args.find_first_of(' ') + 1) << endl;
+                if(typeid(*(whichCommand(args))) == typeid(ErrorCommand)){
+                cout << args;
+                    }
+                else {
+                    cout << whichCommand(args)->toString() + " " +
+                            args.substr(args.find_first_of(' ') + 1) << endl;
+                }
             }
         }
         whichCommand(args)->execute(fs);
@@ -27,18 +40,11 @@ void Environment::start() {
 
 }
 
-Environment::Environment() : commandsHistory(), fs() {
-}
-
-Environment::Environment(const Environment &other) {
-    if (verbose == 1 | verbose == 3) {
+Environment::Environment(const Environment &other):commandsHistory() {
+    if (verbose == 1 || verbose == 3) {
         cout << "Environment ::Environment(const Environment& other)" << endl;
     }
     envcopy(other);
-}
-
-FileSystem &Environment::getFileSystem() {
-    return fs;
 }
 
 const vector<BaseCommand *> &Environment::getHistory() const {
@@ -60,14 +66,14 @@ void Environment::envcopy(const Environment &other) {
 
 
 Environment::~Environment() {
-    if (verbose == 1 | verbose == 3) {
+    if (verbose == 1 || verbose == 3) {
         cout << "Environment ::~Environment()" << endl;
     }
     clear();
 }
 
 Environment::Environment(Environment &&other) {
-    if (verbose == 1 | verbose == 3) {
+    if (verbose == 1 || verbose == 3) {
         cout << "Environment ::Environment(Environment &&other)" << endl;
     }
     commandsHistory = other.getHistory();
@@ -75,7 +81,7 @@ Environment::Environment(Environment &&other) {
 }
 
 Environment &Environment::operator=(const Environment &other) {
-    if (verbose == 1 | verbose == 3) {
+    if (verbose == 1 || verbose == 3) {
         cout << "Environment& Environment ::operator=(const Environment &other) " << endl;
     }
     if (this != &other) {
@@ -87,7 +93,7 @@ Environment &Environment::operator=(const Environment &other) {
 }
 
 Environment &Environment::operator=(Environment &&other) {
-    if (verbose == 1 | verbose == 3) {
+    if (verbose == 1 || verbose == 3) {
         cout << "Environment& Environment ::operator=(Environment &&other)" << endl;
     }
     if (this != &other) {

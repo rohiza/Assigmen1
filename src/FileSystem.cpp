@@ -4,7 +4,7 @@
 using namespace std;
 
 FileSystem::FileSystem() {
-    if (verbose == 1 | verbose == 3) {
+    if (verbose == 1 || verbose == 3) {
         cout << "FileSystem ::FileSystem()" << endl;
     }
     rootDirectory = new Directory("", nullptr);
@@ -12,7 +12,7 @@ FileSystem::FileSystem() {
 }
 
 FileSystem::FileSystem(const FileSystem &other) {
-    if (verbose == 1 | verbose == 3) {
+    if (verbose == 1 || verbose == 3) {
         cout << "FileSystem ::FileSystem(const FileSystem& other)" << endl;
     }
     copy(&other.getRootDirectory());
@@ -24,7 +24,7 @@ void FileSystem::copy(Directory *otherRootDirectory) {
 }
 
 FileSystem::~FileSystem() {
-    if (verbose == 1 | verbose == 3) {
+    if (verbose == 1 || verbose == 3) {
         cout << "FileSystem ::~FileSystem()" << endl;
     }
     if (rootDirectory != nullptr) {
@@ -36,7 +36,7 @@ FileSystem::~FileSystem() {
 }
 
 FileSystem::FileSystem(FileSystem &&other) {
-    if (verbose == 1 | verbose == 3)
+    if (verbose == 1 || verbose == 3)
         cout << "FileSystem ::FileSystem(FileSystem &&other)" << endl;
     rootDirectory = other.rootDirectory;
     workingDirectory = other.workingDirectory;
@@ -45,7 +45,7 @@ FileSystem::FileSystem(FileSystem &&other) {
 }
 
 FileSystem &FileSystem::operator=(const FileSystem &other) {
-    if (verbose == 1 | verbose == 3)
+    if (verbose == 1 || verbose == 3)
         cout << "FileSystem& FileSystem ::operator=(const FileSystem &other)" << endl;
     if (this != &other) {
         copy(&other.getRootDirectory());
@@ -54,7 +54,7 @@ FileSystem &FileSystem::operator=(const FileSystem &other) {
 }
 
 FileSystem &FileSystem::operator=(FileSystem &&other) {
-    if (verbose == 1 | verbose == 3)
+    if (verbose == 1 || verbose == 3)
         cout << "FileSystem& FileSystem ::operator=(FileSystem &&other)" << endl;
     if (this != &other){
         rootDirectory = other.rootDirectory;

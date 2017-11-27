@@ -28,27 +28,27 @@ BaseFile* File::clone() const { return  new File(*this);}
 
 bool File::dirOrFile() { return false;}
 
-Directory::Directory(string name, Directory *parent) : BaseFile(name),parent(parent) ,children(){
-
+Directory::Directory(string name, Directory *parent) : BaseFile(name),parent() ,children(){
+    this->setParent(parent);
 }
 
 Directory::Directory(const Directory& other):BaseFile(other.getName()) ,parent(nullptr),children(){
     dircopy(other.children);
-    if(verbose==1 | verbose==3){
+    if(verbose==1 || verbose==3){
         cout << "Directory::Directory(const Directory& other):BaseFile(other.getName()) ,parent(other.getParent()),children()";
     }
 }
 
 void Directory::dircopy(vector<BaseFile*> other)   {
 
-    for(int i=0 ;i<other.size();i++){
+    for(unsigned int i=0 ;i<other.size();i++){
         this->addFile((other[i]->clone()));
     }
 }
 
 Directory:: Directory(Directory &&other):BaseFile(other.getName())
 {
-    if(verbose==1 | verbose==3) {
+    if(verbose==1 || verbose==3) {
         cout << "Directory:: Directory(Directory &&other):BaseFile(other.getName())";
     }
     clear();
@@ -63,7 +63,7 @@ void Directory :: steal(Directory& other)
 
 Directory& Directory::operator=( Directory &&other)
 {
-    if(verbose==1 | verbose==3) {
+    if(verbose==1 || verbose==3) {
         cout << "Directory& Directory::operator=( Directory &&other)";
     }
     if(this != &other){
@@ -76,7 +76,7 @@ Directory& Directory::operator=( Directory &&other)
 
 
 Directory& Directory::operator=(const Directory &other) {
-    if(verbose==1 | verbose==3) {
+    if(verbose==1 || verbose==3) {
         cout << "Directory& Directory::operator=(const Directory &other)";
     }
     if(this != &other){
@@ -131,7 +131,7 @@ void Directory:: removeFile(string name) {
 }
 
 Directory ::~ Directory(){
-    if(verbose == 1){
+    if(verbose == 1 || verbose == 3){
         cout << "Directory ::~ Directory()" << endl;
     }
     clear();
