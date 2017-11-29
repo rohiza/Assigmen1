@@ -79,32 +79,42 @@ bool BaseCommand::isFileExists(string args, FileSystem &fs) {
             if(start->getParent() != nullptr){
                 start = start->getParent();
                 if(j == fileNames.size()-1){
+                    start = nullptr;
                     return true;
                 }
                 else {
+                    j++;
                     continue;
                 }
             }
             else{
+                start = nullptr;
                 return false;
             }
         }
         for (unsigned int i = 0; i < (start->getChildren().size()); i++) {
             if (j == fileNames.size()-1){
                 if (!(start->getChildren()[i]->dirOrFile()) && (start->getChildren()[i]->getName() == fileNames[j])) {
+                    start = nullptr;
                     return true;
                 }
                 else if(start->getChildren()[i]->dirOrFile() && (start->getChildren()[i]->getName() == fileNames[j])){
+                    start = nullptr;
                     return true;
                 }
             }
-            else if (start->getChildren()[i]->dirOrFile() && (start->getChildren()[i]->getName() == fileNames[j])){
+            else if(!(start->getChildren()[i]->dirOrFile()) && (start->getChildren()[i]->getName() == fileNames[j])){
+                start = nullptr;
+                return true;
+            }
+            else if(start->getChildren()[i]->dirOrFile() && (start->getChildren()[i]->getName() == fileNames[j])){
                 start = dynamic_cast<Directory *>((start->getChildren())[i]);
                 break;
             }
         }
         j++;
     }
+    start = nullptr;
     return false;
 }
 
@@ -128,8 +138,9 @@ void CdCommand::execute(FileSystem &fs) {
         cout << "The system cannot find the path specified" << endl;
     }
     else {
-        Directory *start = getLastDir(getArgs(), fs);
+        Directory* start = getLastDir(getArgs(), fs);
         fs.setWorkingDirectory(start);
+        start = nullptr;
     }
     }
 }
@@ -146,7 +157,12 @@ void LsCommand::execute(FileSystem &fs) {
     if (getArgs() == "") {
         fs.getWorkingDirectory().sortByName();
         fs.getWorkingDirectory().printChildren();
-    } else {
+    }
+    else if(getArgs() == "/"){
+        fs.getRootDirectory().sortByName();
+        fs.getRootDirectory().printChildren();
+    }
+    else {
         if (((getArgs() != "") && getArgs() != "-s") && (!isFileExists(getArgs(), fs))) {
             cout << "The system cannot find the path specified" << endl;
         } else {
@@ -162,6 +178,8 @@ void LsCommand::execute(FileSystem &fs) {
                 fs.getWorkingDirectory().printChildren();
                 fs.setWorkingDirectory(curr);
                 delete path;
+                path = nullptr;
+                curr = nullptr;
             }
         }
     }
@@ -180,7 +198,7 @@ void MkdirCommand::execute(FileSystem &fs) {
         cout << "The directory already exists" << endl;
     }
     else{
-        Directory *start = getLastDir(getArgs(), fs);
+        Directory* start = getLastDir(getArgs(), fs);
         vector<string> fileNames = splitString(getArgs());
         size_t j = 0;
         if(getArgs().at(0) == '/'){
@@ -188,15 +206,19 @@ void MkdirCommand::execute(FileSystem &fs) {
         }
         while(j < fileNames.size()) {
             if (start->getName() == fileNames[j]){
+                j++;
                 continue;
             }
-            start->addFile(new Directory(fileNames[j], start));
+            BaseFile* d = new Directory(fileNames[j],start);
+            start->addFile(d);
             if(j != fileNames.size() -1) {
                 start = dynamic_cast<Directory *>(start->getChildren()[start->getChildren().size() - 1]);
             }
             j++;
         }
+        start = nullptr;
     }
+
 }
 
 string MkdirCommand::toString() {
@@ -239,11 +261,13 @@ void MkfileCommand::execute(FileSystem &fs) {
     if(filePath.size() == 1 && filePath[0] == file) {
         if (isFileExists(newFilePath, fs)) {
             cout << "File already exists" << endl;
+            start = nullptr;
             return;
         } else {
             start = getLastDir(newFilePath, fs);
             File newOne = File(file, size);
             start->addFile(newOne.clone());
+            start = nullptr;
             return;
         }
     }
@@ -258,6 +282,7 @@ void MkfileCommand::execute(FileSystem &fs) {
         start = getLastDir(path, fs);
         File newOne = File(file, size);
         start->addFile(newOne.clone());
+        start = nullptr;
     }
 }
 
@@ -287,15 +312,20 @@ void CpCommand::execute(FileSystem &fs) {
             start2->addFile(new Directory(*start));
         }
         else {
-            vector<BaseFile *> children;
-            children = start->getChildren();
             //go over all (start->getChildren()), check if directory and name = fileName
-            for (unsigned  int i = 0; i < children.size(); i++) {
-                if (children[i]->getName() == fileNames[fileNames.size()-1]) {
-                    start2->addFile(children[i]);
+            for (unsigned  int i = 0; i < start->getChildren().size(); i++) {
+                if (start->getChildren()[i]->getName() == fileNames[fileNames.size()-1]) {
+                    if(isFileExists(destinationPath + '/'+ fileNames[fileNames.size()-1],fs)){
+                        return;
+                    }
+                    else {
+                        start2->addFile(start->getChildren()[i]);
+                    }
                 }
             }
         }
+        start = nullptr;
+        start2 = nullptr;
     }
 }
 
@@ -320,6 +350,10 @@ void MvCommand::execute(FileSystem &fs) {
     else {
         Directory *start = getLastDir(sourcePath, fs);
         Directory *start2 = getLastDir(destinationPath, fs);
+        if(start == start2){
+            cout <<"Can't move directory" <<endl;
+            return;
+        }
         vector<string> fileNames = splitString(sourcePath);
         if (fileNames[fileNames.size() - 1] == start->getName()) { //the last file is a directory
             if (start == &fs.getWorkingDirectory() || start == &fs.getRootDirectory()
@@ -341,7 +375,6 @@ void MvCommand::execute(FileSystem &fs) {
         }
     }
 }
-
 
 string MvCommand::toString() {
     return "mv";
@@ -379,6 +412,7 @@ void RenameCommand::execute(FileSystem &fs) {
                 }
             }
         }
+        start = nullptr;
     }
 }
 
@@ -419,6 +453,7 @@ void RmCommand::execute(FileSystem &fs) {
                 i++;
             }
         }
+        start = nullptr;
     }
 }
 

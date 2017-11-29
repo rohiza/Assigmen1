@@ -19,28 +19,31 @@ void Environment::start() {
         if(args == "exit") {
             return;
         }
+        BaseCommand *newCmd = (whichCommand(args));
         if(verbose ==2 || verbose == 3) {
             unsigned long firstSpace = args.find(' ');
             if(firstSpace == string::npos){
-                cout <<whichCommand(args)->toString() <<endl;
+                cout <<newCmd->toString() <<endl;
             }
             else {
-                if(typeid(*(whichCommand(args))) == typeid(ErrorCommand)){
+                if(typeid(*newCmd) == typeid(ErrorCommand)){
                 cout << args;
                     }
                 else {
-                    cout << whichCommand(args)->toString() + " " +
+                    cout << newCmd->toString() + " " +
                             args.substr(args.find_first_of(' ') + 1) << endl;
                 }
             }
         }
-        whichCommand(args)->execute(fs);
-        addToHistory(whichCommand(args));
+        newCmd->execute(fs);
+        addToHistory(newCmd);
+        newCmd = nullptr;
+
     }
 
 }
 
-Environment::Environment(const Environment &other):commandsHistory() {
+Environment::Environment(const Environment &other):commandsHistory(), fs() {
     if (verbose == 1 || verbose == 3) {
         cout << "Environment ::Environment(const Environment& other)" << endl;
     }
@@ -72,7 +75,7 @@ Environment::~Environment() {
     clear();
 }
 
-Environment::Environment(Environment &&other) {
+Environment::Environment(Environment &&other) :commandsHistory(), fs() {
     if (verbose == 1 || verbose == 3) {
         cout << "Environment ::Environment(Environment &&other)" << endl;
     }

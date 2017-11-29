@@ -3,7 +3,7 @@
 #include <iostream>
 using namespace std;
 
-FileSystem::FileSystem() {
+FileSystem::FileSystem():rootDirectory(), workingDirectory() {
     if (verbose == 1 || verbose == 3) {
         cout << "FileSystem ::FileSystem()" << endl;
     }
@@ -11,7 +11,7 @@ FileSystem::FileSystem() {
     workingDirectory = rootDirectory;
 }
 
-FileSystem::FileSystem(const FileSystem &other) {
+FileSystem::FileSystem(const FileSystem &other): rootDirectory(), workingDirectory() {
     if (verbose == 1 || verbose == 3) {
         cout << "FileSystem ::FileSystem(const FileSystem& other)" << endl;
     }
@@ -35,7 +35,7 @@ FileSystem::~FileSystem() {
     workingDirectory = nullptr;
 }
 
-FileSystem::FileSystem(FileSystem &&other) {
+FileSystem::FileSystem(FileSystem &&other): rootDirectory(), workingDirectory() {
     if (verbose == 1 || verbose == 3)
         cout << "FileSystem ::FileSystem(FileSystem &&other)" << endl;
     rootDirectory = other.rootDirectory;
@@ -71,4 +71,5 @@ Directory &FileSystem::getWorkingDirectory() const { return *workingDirectory; }
 
 void FileSystem::setWorkingDirectory(Directory *newWorkingDirectory) {
     this->workingDirectory = newWorkingDirectory;
+    newWorkingDirectory = nullptr;
 }
