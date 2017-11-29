@@ -16,6 +16,7 @@ public:
     virtual BaseFile* clone() const =0;
     virtual bool dirOrFile() =0;
     virtual ~BaseFile() {};
+    virtual void clear() = 0;
 };
 
 class File : public BaseFile {
@@ -23,11 +24,12 @@ private:
     int size;
 
 public:
+
     File(string name, int size); // Constructor
     int getSize(); // Return the size of the file
     virtual BaseFile* clone() const ;
     bool dirOrFile() ;
-};
+    virtual void clear();};
 
 class Directory : public BaseFile {
 private:
@@ -55,7 +57,7 @@ public:
     void dircopy(vector<BaseFile *> other) ;
     Directory &operator = (const Directory & other);
     Directory& operator=(Directory &&other);
-    void clear();
+    virtual void clear();
     void steal(Directory& other);
     void printChildren();
     bool containsChild(BaseFile*);

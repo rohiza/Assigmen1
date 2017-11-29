@@ -19,7 +19,7 @@ public:
 	vector<string> splitString(string args);
 	Directory* getLastDir(string args, FileSystem &fs);
 	bool isFileExists(string args, FileSystem &fs);
-	virtual ~BaseCommand() = default;
+	virtual ~BaseCommand() {};
 };
 
 class PwdCommand : public BaseCommand {
